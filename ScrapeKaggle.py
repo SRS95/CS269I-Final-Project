@@ -1,3 +1,12 @@
+'''
+This script scrapes information from Kaggle's website about competitions
+and competitors. Since Kaggle does not expose all endpoints to its public
+API, some clever maneuvering has to be used to aggregate some of the data. 
+
+Author: Sam Schwager
+Last Edited: 12/4/2018
+'''
+
 from bs4 import BeautifulSoup
 import requests
 import json

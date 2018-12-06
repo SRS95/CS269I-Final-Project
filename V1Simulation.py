@@ -174,20 +174,23 @@ Author: Sam Sklar
 Last Edited 12/6/2018
 
 '''
-def plot_point_gains(average_gains, num_iterations, user_info):
+def plot_point_gains(average_gains, user_info):
 
     bars1 = []
     bars2 = []
     r = []
-    names = ["Revenue", "Quora", "Airbus", "Protein Atlas", "Santa", "NFL Punts", "Whales", "Merchants", "Images", "PlastiCC", "Doodles"]
+    shortened_names = ["Revenue", "Quora", "Airbus", "Protein Atlas", "Santa",\
+    					"Whales", "Merchants", "Images", "PlastiCC", "Doodles"]
     count = 0
     
     for key in average_gains.keys(): 
-        #names.append(key)
+        # Don't plot the NFL competition since we don't
+        # have enough data about it
+        if key == "NFL-Punt-Analytics-Competition": continue
         competitors = get_competitors(key, user_info)
         original_score = compute_score(competitors, user_info)
         bars1.append(original_score)
-        point_gain = average_gains[key]/num_iterations
+        point_gain = average_gains[key]
         new_score = original_score + point_gain
         bars2.append(new_score)
         r.append(count)
@@ -202,11 +205,11 @@ def plot_point_gains(average_gains, num_iterations, user_info):
     plt.bar(r, bars2, bottom=bars1, edgecolor='white', width=barWidth)
      
     # Custom X axis
-    plt.xticks(r, names2, fontweight='bold')
+    plt.xticks(r, shortened_names, fontweight='bold')
     plt.xlabel("Competition")
     
     #Custom Y axis
-    plt.ylabel("Points (Before:Blue and After:Yellow)")
+    plt.ylabel("Points (Before:Blue and After:Orange)")
      
     # Show graphic
     plt.show()
@@ -255,7 +258,15 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 		gains = compute_gains(normal_competitors_info, normal_competitors_info_updated, user_info)
 		for name in normal_competition_names: average_gains[name] = average_gains[name] + gains[name]
 	
-	for key in average_gains.keys(): print ("Competition " + key + " gained " + str(average_gains[key]/num_iterations) + " points.")
+	for key in average_gains.keys(): 
+		average_gains[key] /= num_iterations
+		print ("Competition " + key + " gained " + str(average_gains[key]) + " points.")
+
+	# Plot payout by category best fit lines, competitor info and marginal gains AFTER reallocation
+	if make_plots: 
+		#plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated)
+		plot_competitor_info(normal_competitors_info_updated)
+		plot_point_gains(average_gains, user_info)
 
 
 
