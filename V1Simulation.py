@@ -246,6 +246,8 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
     
 	# Plot payout by category best fit lines AFTER reallocation
 	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated)
+    
+    # Plot point increase for each competition after player reshuffling
     #if make_plots: plot_point_gains(average_gains, num_iterations, user_info)
 
 
