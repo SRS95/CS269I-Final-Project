@@ -293,9 +293,13 @@ def main():
 	# The rest are normal competitions
 	normal_competition_names = [name for name in competition_names if name != gold_competition]
 
+
 	# Simulate the reassignment
 	# If make_plots is true then we generate plots throughout
-	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=False)
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-p", "--plot", help="run simulation with plotting", action="store_true")
+	args = parser.parse_args()
+	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=args.plot)
 	
 
 if __name__ == "__main__":
