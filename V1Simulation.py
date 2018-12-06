@@ -21,6 +21,15 @@ from matplotlib import pyplot as plt
 # Number of users kept in the gold competition
 num_retained = 25
 
+# Mapping from competition name to payout
+competitions_to_payouts =\
+{"two-sigma-financial-news":100000., "ga-customer-revenue-prediction":45000.,\
+"humpback-whale-identification":25000., "airbus-ship-detection":60000.,\
+"human-protein-atlas-image-classification":37000., "quora-insincere-questions-classification":25000.,\
+"NFL-Punt-Analytics-Competition":80000., "inclusive-images-challenge":25000.,\
+"elo-merchant-category-recommendation":50000., "quickdraw-doodle-recognition":25000.,\
+"traveling-santa-2018-prime-paths": 25000., "PLAsTiCC-2018":25000.}
+
 
 # Returns a sorted list over all competitors in the competition that are experts, masters, and grandmasters
 # NOTE: the list is sorted by tier and by points with in each tier
@@ -86,7 +95,7 @@ def compute_gains(before, after, user_info):
 	return result
 
 
-def make_histogram(frequencies):
+def make_category_histogram(frequencies):
 	plt.hist(x=frequencies, bins=3)
 	plt.show()
 
@@ -116,6 +125,34 @@ def plot_competitor_info(gold_competitors_info, normal_competitors_info):
 	make_histogram(get_frequencies(gold_competitors_eliminated_info))
 
 
+'''
+Plots best fit lines for number of players
+in a given category vs. payout competition.
+
+This should allow us to get a sense of how
+the number of players of a given category
+changes as the payout is changed.
+
+Author: John Solitario
+Last Edited: 12/6/2018
+'''
+def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, payouts):
+	# Mapping from competition name to payout
+	global competitions_to_payouts
+
+# input:
+#	gold_competitors_info -- sorted list over all competitors in the gold competition:
+#	(sorting done by tier and by points with in each tier from grandmaster to expert
+#	and within each category from most to least points)
+#
+#	normal_competitors_info -- dict mapping from competition name to sorted list over
+#	all competitors in the gold competition (sorted done as in gold_competitors_info)
+
+	raise NotImplementedError
+
+
+
+
 # Perform the simulation
 def perform_simulation(user_data, gold_competition, normal_competition_names, make_plots):
 	global num_retained
@@ -136,9 +173,14 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	if make_plots: plot_competitor_info(gold_competitors_info, normal_competitors_info)
 
 	# Find the assignment probabilities for the remaining 11 competitions
-	payouts = [45000., 25000., 60000., 37000., 25000., 80000., 25000., 50000., 25000., 25000., 25000.]
-	norm_const = sum(payouts)
-	probabilities = [x / norm_const for x in payouts]
+	normal_payouts = [45000., 25000., 60000., 37000., 25000., 80000., 25000., 50000., 25000., 25000., 25000.]
+	norm_const = sum(normal_payouts)
+	probabilities = [x / norm_const for x in normal_payouts]
+
+
+	# Plot payout by category best fit lines BEFORE reallocation
+	plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, [100000] + payouts)
+
 
 	# Average across 100 allocations
 	average_gains = {}
