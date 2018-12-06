@@ -175,8 +175,60 @@ def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_inf
 #	normal_competitors_info -- dict mapping from competition name to sorted list over
 #	all competitors in the gold competition (sorted done as in gold_competitors_info)
 
-	raise NotImplementedError
-  
+	# Index 0 -> gramndmaster, Index 2 -> master, Index 3 -> expert
+
+
+	frequencies = {}
+	for comp in normal_competitors_info:
+		if comp == "NFL-Punt-Analytics-Competition": continue
+		frequencies[comp] = get_frequencies(normal_competitors_info[comp])
+	frequencies["two-sigma-financial-news"] = get_frequencies(gold_competitors_info)
+
+	bar1, bar2, bar3, bar4 = [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0] # bucket1 0 - 25,000, bucket2 25,001 to 50,000, etc.
+	bucket1_count, bucket2_count, bucket3_count, bucket4_count = 0, 0, 0, 0
+
+	for comp in frequencies:
+		if competitions_to_payouts[comp] <= 25000:
+			bucket1_count +=1
+			frequency = frequencies[comp]
+			for index in range(len(bar1)): bar1[index] += frequency[index]
+		elif competitions_to_payouts[comp] > 25000 and competitions_to_payouts[comp] <= 50000: 
+			bucket2_count +=1
+			frequency = frequencies[comp]
+			for index in range(len(bar2)): bar2[index] += frequency[index]
+		elif competitions_to_payouts[comp] > 50000 and competitions_to_payouts[comp] <= 75000: 
+			bucket3_count +=1
+			frequency = frequencies[comp]
+			for index in range(len(bar3)): bar3[index] += frequency[index]
+		else: 
+			bucket4_count +=1
+			frequency = frequencies[comp]
+			for index in range(len(bar4)): bar4[index] += frequency[index]
+
+	for index in range(3):
+		bar1[index] = float(bar1[index]) / bucket1_count
+		bar2[index] = float(bar2[index]) / bucket2_count
+  		bar3[index] = float(bar3[index]) / bucket3_count
+  		bar4[index] = float(bar4[index]) / bucket4_count
+  	print bar1
+  	grandmasters = [bar1[0], bar2[0], bar3[0], bar4[0]]
+  	masters = [bar1[1], bar2[1], bar3[1], bar4[1]]
+  	experts = [bar1[2], bar2[2], bar3[2], bar4[2]]
+  	ind = np.arange(4)
+  	bars = [bar1[1] + bar1[2], bar2[1] + bar2[2], bar3[1] + bar3[2], bar4[1] + bar4[2]]
+
+  	
+  	p1 = plt.bar(ind, experts) 
+  	p2 = plt.bar(ind, masters, bottom = experts) 
+  	p3 = plt.bar(ind, grandmasters, bottom = bars)
+  	
+  	plt.ylabel('Total Number of Particpators')
+	plt.title('Partipation by Total Competition Payout')
+	plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
+	plt.xlabel('Total Competition Payout ($)')
+	plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
+  	plt.show()
+
 '''
 Plots point gain for each competition (outside of the gold competition)
 Using a stacked bar chart
@@ -249,7 +301,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	probabilities = [x / norm_const for x in normal_payouts]
 
 	# Plot payout by category best fit lines BEFORE reallocation
-	#if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info)
+	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info)
 
 	# Average across 100 allocations
 	average_gains = {}
