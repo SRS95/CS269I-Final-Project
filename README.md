@@ -8,5 +8,9 @@ python3 V1Simulation.py
 
 To run with plotting, type:
 ```
+python3 V1Simulation.py -p
+```
+Or:
+```
 python3 V1Simulation.py --plot
 ```
