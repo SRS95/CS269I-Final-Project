@@ -163,7 +163,7 @@ changes as the payout is changed.
 Authors: John Solitario
 Last Edited: 12/6/2018
 '''
-def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info):
+def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, after_comp):
 	# Mapping from competition name to payout
 	global competitions_to_payouts
 
@@ -223,7 +223,9 @@ def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_inf
   	p3 = plt.bar(ind, grandmasters, bottom = bars)
   	
   	plt.ylabel('Average Number of Particpators')
-	plt.title('Partipation Compared to Competition Payout')
+  	if after_comp: plt.title('After Reallocation: Partipation Compared to Competition Payout')
+ 	else: plt.title('Before Reallocation: Partipation Compared to Competition Payout')
+ 	
 	plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
 	plt.xlabel('Total Competition Payout ($)')
 	plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
@@ -301,7 +303,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	probabilities = [x / norm_const for x in normal_payouts]
 
 	# Plot payout by category best fit lines BEFORE reallocation
-	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info)
+	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, False)
 
 	# Average across 100 allocations
 	average_gains = {}
@@ -323,7 +325,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 
 	# Plot payout by category best fit lines, competitor info and marginal gains AFTER reallocation
 	if make_plots: 
-		#plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated)
+		plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated, False)
 		plot_competitor_info(normal_competitors_info_updated)
 		plot_point_gains(average_gains, user_info)
 
