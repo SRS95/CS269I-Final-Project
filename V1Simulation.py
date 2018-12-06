@@ -149,7 +149,7 @@ This should allow us to get a sense of how
 the number of players of a given category
 changes as the payout is changed.
 
-Authors: Sam Schwager and John Solitario
+Authors: John Solitario
 Last Edited: 12/6/2018
 '''
 def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info):
@@ -172,7 +172,6 @@ Using a stacked bar chart
 
 Author: Sam Sklar
 Last Edited 12/6/2018
-
 '''
 def plot_point_gains(average_gains, user_info):
 
@@ -191,7 +190,7 @@ def plot_point_gains(average_gains, user_info):
         original_score = compute_score(competitors, user_info)
         bars1.append(original_score)
         point_gain = average_gains[key]
-        new_score = original_score + point_gain
+        new_score = point_gain
         bars2.append(new_score)
         r.append(count)
         count += 1
@@ -230,7 +229,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	normal_competitors_info = {}
 	for name in normal_competition_names: normal_competitors_info[name] = get_competitors(name, user_info)
 
-	# Only keep the top 25 in the gold competition
+	# Only keep the top "num_retained" in the gold competition
 	gold_competitors_retained_info = gold_competitors_info[:num_retained]
 	gold_competitors_eliminated_info = gold_competitors_info[num_retained:]
 
