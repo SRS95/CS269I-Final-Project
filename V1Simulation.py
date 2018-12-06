@@ -1,9 +1,22 @@
+'''
+This script simulates Version 1 of our proposed changes
+to Kaggle's model. Specifically, we propose having one
+"gold" competition at any given time in which only a fixed
+number of users can participate, forcing users who likely
+would have otherwise chosen to compete in the highest paying
+competition to compete in other "normal" competitions.
+
+Author: Sam Schwager
+Last Edited: 12/4/2018
+'''
+
 import json
 import numpy as np
 import pandas as pd
 import os
 import operator
 import copy
+from matplotlib import pyplot as plt
 
 # Number of users kept in the gold competition
 num_retained = 25
@@ -73,8 +86,38 @@ def compute_gains(before, after, user_info):
 	return result
 
 
+def make_histogram(frequencies):
+	plt.hist(x=frequencies, bins=3)
+	plt.show()
+
+
+def get_frequencies(competitor_info):
+	frequencies = [0, 0, 0]
+
+	for competitor in competitor_info:
+		if competitor[1][0] == "grandmaster": frequencies[0] += 1
+		elif competitor[1][0] == "master": frequencies[1] += 1
+		elif competitor[1][0] == "expert": frequencies[2] += 1
+
+	return frequencies
+
+
+def plot_competitor_info(gold_competitors_info, normal_competitors_info):
+	global num_retained
+
+	make_histogram(get_frequencies(gold_competitors_info))
+	
+	for key in normal_competitors_info: make_histogram(get_frequencies(normal_competitors_info[key]))
+
+	gold_competitors_retained_info = gold_competitors_info[:num_retained]
+	gold_competitors_eliminated_info = gold_competitors_info[num_retained:]
+
+	make_histogram(get_frequencies(gold_competitors_retained_info))
+	make_histogram(get_frequencies(gold_competitors_eliminated_info))
+
+
 # Perform the simulation
-def perform_simulation(user_data, gold_competition, normal_competition_names):
+def perform_simulation(user_data, gold_competition, normal_competition_names, make_plots):
 	global num_retained
 
 	# mapping from expert, master, and grandmaster usernames to (tier, points)
@@ -87,20 +130,30 @@ def perform_simulation(user_data, gold_competition, normal_competition_names):
 	for name in normal_competition_names: normal_competitors_info[name] = get_competitors(name, user_info)
 
 	# Only keep the top 25 in the gold competition
-	gold_competitors_retained_info = gold_competitors_info[:25]
-	gold_competitors_eliminated_info = gold_competitors_info[25:]
+	gold_competitors_retained_info = gold_competitors_info[:num_retained]
+	gold_competitors_eliminated_info = gold_competitors_info[num_retained:]
+
+	if make_plots: plot_competitor_info(gold_competitors_info, normal_competitors_info)
 
 	# Find the assignment probabilities for the remaining 11 competitions
 	payouts = [45000., 25000., 60000., 37000., 25000., 80000., 25000., 50000., 25000., 25000., 25000.]
 	norm_const = sum(payouts)
 	probabilities = [x / norm_const for x in payouts]
 
-	# Allocate eliminated competitors to other competitions
-	normal_competitors_info_updated = allocate_eliminated(gold_competitors_eliminated_info, normal_competition_names, probabilities, copy.deepcopy(normal_competitors_info))
+	# Average across 100 allocations
+	average_gains = {}
+	for name in normal_competition_names: average_gains[name] = 0.0
+	num_iterations = 100
 
-	# Compute and print gains from reallocation
-	gains = compute_gains(normal_competitors_info, normal_competitors_info_updated, user_info)
-	for key in gains.keys(): print ("Competition " + key + " gained " + str(gains[key]) + " points.")
+	for simulation_index in range(num_iterations):
+		# Allocate eliminated competitors to other competitions
+		normal_competitors_info_updated = allocate_eliminated(gold_competitors_eliminated_info, normal_competition_names, probabilities, copy.deepcopy(normal_competitors_info))
+
+		# Compute gains from reallocation
+		gains = compute_gains(normal_competitors_info, normal_competitors_info_updated, user_info)
+		for name in normal_competition_names: average_gains[name] = average_gains[name] + gains[name]
+	
+	for key in average_gains.keys(): print ("Competition " + key + " gained " + str(average_gains[key]/num_iterations) + " points.")
 
 
 def main():
@@ -117,7 +170,8 @@ def main():
 	normal_competition_names = [name for name in competition_names if name != gold_competition]
 
 	# Simulate the reassignment
-	perform_simulation(user_data, gold_competition, normal_competition_names)
+	# If make_plots is true then we generate plots throughout
+	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=False)
 	
 
 if __name__ == "__main__":
