@@ -94,9 +94,28 @@ def compute_gains(before, after, user_info):
 
 	return result
 
+# Makes a competition name readable for plotting purposes
+def make_readable(name):
+	words = name.split('-')
 
-def make_category_histogram(frequencies):
-	plt.hist(x=frequencies, bins=3)
+	result = ""
+
+	for idx, word in enumerate(words):
+		word = word[0].upper() + word[1:]
+		if idx < len(words) - 1: result += word + " "
+
+	return result
+
+
+
+def make_category_histogram(frequencies, competition_name):
+	categories = ('Grandmasters', 'Masters', 'Experts')
+	y_pos = np.arange(len(categories))
+	plt.bar(y_pos, frequencies, align='center', alpha=0.5)
+	plt.xticks(y_pos, categories)
+	plt.ylabel('Number of competitors')
+	plt.xlabel('Competitor category')
+	plt.title('Number of competitors by category for ' + competition_name)
 	plt.show()
 
 
@@ -111,18 +130,14 @@ def get_frequencies(competitor_info):
 	return frequencies
 
 
-def plot_competitor_info(gold_competitors_info, normal_competitors_info):
+def plot_competitor_info(normal_competitors_info, gold_competitors_info=None):
 	global num_retained
 
-	make_histogram(get_frequencies(gold_competitors_info))
-	
-	for key in normal_competitors_info: make_histogram(get_frequencies(normal_competitors_info[key]))
+	if gold_competitors_info is not None: 
+		make_category_histogram(get_frequencies(gold_competitors_info), make_readable("two-sigma-financial-news"))
 
-	gold_competitors_retained_info = gold_competitors_info[:num_retained]
-	gold_competitors_eliminated_info = gold_competitors_info[num_retained:]
-
-	make_histogram(get_frequencies(gold_competitors_retained_info))
-	make_histogram(get_frequencies(gold_competitors_eliminated_info))
+	for key in normal_competitors_info:
+		make_category_histogram(get_frequencies(normal_competitors_info[key]), make_readable(key))
 
 
 '''
@@ -133,7 +148,7 @@ This should allow us to get a sense of how
 the number of players of a given category
 changes as the payout is changed.
 
-Author: John Solitario
+Authors: Sam Schwager and John Solitario
 Last Edited: 12/6/2018
 '''
 def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info):
@@ -170,17 +185,15 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	gold_competitors_retained_info = gold_competitors_info[:num_retained]
 	gold_competitors_eliminated_info = gold_competitors_info[num_retained:]
 
-	if make_plots: plot_competitor_info(gold_competitors_info, normal_competitors_info)
+	if make_plots: plot_competitor_info(normal_competitors_info, gold_competitors_info)
 
 	# Find the assignment probabilities for the remaining 11 competitions
 	normal_payouts = [45000., 25000., 60000., 37000., 25000., 80000., 25000., 50000., 25000., 25000., 25000.]
 	norm_const = sum(normal_payouts)
 	probabilities = [x / norm_const for x in normal_payouts]
 
-
 	# Plot payout by category best fit lines BEFORE reallocation
-	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info)
-
+	#if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info)
 
 	# Average across 100 allocations
 	average_gains = {}
@@ -198,9 +211,11 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	
 	for key in average_gains.keys(): print ("Competition " + key + " gained " + str(average_gains[key]/num_iterations) + " points.")
 
-
-	# Plot payout by category best fit lines AFTER reallocation
-	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated)
+	# Plot payout by category best fit lines, competitor info and marginal gains AFTER reallocation
+	if make_plots: 
+		#plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated)
+		plot_competitor_info(normal_competitors_info_updated)
+		#plot_marginal_gains
 
 
 def main():
@@ -218,7 +233,7 @@ def main():
 
 	# Simulate the reassignment
 	# If make_plots is true then we generate plots throughout
-	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=False)
+	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=True)
 	
 
 if __name__ == "__main__":
