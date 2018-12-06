@@ -136,7 +136,7 @@ changes as the payout is changed.
 Author: John Solitario
 Last Edited: 12/6/2018
 '''
-def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, payouts):
+def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info):
 	# Mapping from competition name to payout
 	global competitions_to_payouts
 
@@ -179,7 +179,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 
 
 	# Plot payout by category best fit lines BEFORE reallocation
-	plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, [100000] + payouts)
+	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info)
 
 
 	# Average across 100 allocations
@@ -187,6 +187,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	for name in normal_competition_names: average_gains[name] = 0.0
 	num_iterations = 100
 
+	normal_competitors_info_updated = None
 	for simulation_index in range(num_iterations):
 		# Allocate eliminated competitors to other competitions
 		normal_competitors_info_updated = allocate_eliminated(gold_competitors_eliminated_info, normal_competition_names, probabilities, copy.deepcopy(normal_competitors_info))
@@ -196,6 +197,10 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 		for name in normal_competition_names: average_gains[name] = average_gains[name] + gains[name]
 	
 	for key in average_gains.keys(): print ("Competition " + key + " gained " + str(average_gains[key]/num_iterations) + " points.")
+
+
+	# Plot payout by category best fit lines AFTER reallocation
+	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated)
 
 
 def main():
