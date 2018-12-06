@@ -222,8 +222,8 @@ def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_inf
   	p2 = plt.bar(ind, masters, bottom = experts) 
   	p3 = plt.bar(ind, grandmasters, bottom = bars)
   	
-  	plt.ylabel('Total Number of Particpators')
-	plt.title('Partipation by Total Competition Payout')
+  	plt.ylabel('Average Number of Particpators')
+	plt.title('Partipation Compared to Competition Payout')
 	plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
 	plt.xlabel('Total Competition Payout ($)')
 	plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
