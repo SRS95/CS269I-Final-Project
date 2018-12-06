@@ -18,6 +18,8 @@ import operator
 import copy
 from matplotlib import pyplot as plt
 from matplotlib import rc
+import argparse
+import zipfile
 
 # Number of users kept in the gold competition
 num_retained = 25
@@ -32,11 +34,20 @@ competitions_to_payouts =\
 "traveling-santa-2018-prime-paths": 25000., "PLAsTiCC-2018":25000.}
 
 
+# Unzip files and create new directory
+def form_leaderboards_dir():
+	for fname in os.listdir("Leaderboards_zip"):
+		if (fname == ".DS_Store"): continue
+		f_title = fname.split('.')[0] + ".csv"
+		with zipfile.ZipFile("Leaderboards_zip/" + fname, 'r') as zip_ref:
+			zip_ref.extractall("Leaderboards")
+
+
 # Returns a sorted list over all competitors in the competition that are experts, masters, and grandmasters
 # NOTE: the list is sorted by tier and by points with in each tier
 def get_competitors(competition, user_info):
 	usernames = set(user_info.keys())
-	competitors = set(pd.read_csv("./Leaderboards/" + competition + "/" + competition + "-publicleaderboard.csv").values[:,1])
+	competitors = set(pd.read_csv("./Leaderboards/" + competition + "-publicleaderboard.csv").values[:,1])
 	overlap_users = competitors.intersection(usernames)
 
 	result_grandmasters = {}
@@ -174,7 +185,6 @@ Author: Sam Sklar
 Last Edited 12/6/2018
 '''
 def plot_point_gains(average_gains, user_info):
-
     bars1 = []
     bars2 = []
     r = []
@@ -212,8 +222,6 @@ def plot_point_gains(average_gains, user_info):
      
     # Show graphic
     plt.show()
-
-
 
 
 # Perform the simulation
@@ -270,11 +278,14 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 
 
 def main():
+	# Make life easier for the user
+	if not os.path.isdir("Leaderboards"): form_leaderboards_dir()
+
 	# Load user data (experts, masters, and grandmasters)
 	user_data = np.load("kaggle_users.npy")
 
 	# Get a list of competition names
-	competition_names = [name for name in os.listdir('./Leaderboards') if name != ".DS_Store"]
+	competition_names = ["-".join(name.split('.')[0].split('-')[:-1]) for name in os.listdir("Leaderboards") if name != ".DS_Store"]
 
 	# Just one "gold" competition in version 1
 	gold_competition = "two-sigma-financial-news"
@@ -284,7 +295,7 @@ def main():
 
 	# Simulate the reassignment
 	# If make_plots is true then we generate plots throughout
-	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=True)
+	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=False)
 	
 
 if __name__ == "__main__":
