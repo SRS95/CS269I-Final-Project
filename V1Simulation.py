@@ -160,7 +160,7 @@ This should allow us to get a sense of how
 the number of players of a given category
 changes as the payout is changed.
 
-Authors: John Solitario
+Author: John Solitario
 Last Edited: 12/6/2018
 '''
 def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, after_comp):
@@ -208,28 +208,28 @@ def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_inf
 	for index in range(3):
 		bar1[index] = float(bar1[index]) / bucket1_count
 		bar2[index] = float(bar2[index]) / bucket2_count
-  		bar3[index] = float(bar3[index]) / bucket3_count
-  		bar4[index] = float(bar4[index]) / bucket4_count
-  	print bar1
-  	grandmasters = [bar1[0], bar2[0], bar3[0], bar4[0]]
-  	masters = [bar1[1], bar2[1], bar3[1], bar4[1]]
-  	experts = [bar1[2], bar2[2], bar3[2], bar4[2]]
-  	ind = np.arange(4)
-  	bars = [bar1[1] + bar1[2], bar2[1] + bar2[2], bar3[1] + bar3[2], bar4[1] + bar4[2]]
+		bar3[index] = float(bar3[index]) / bucket3_count
+		bar4[index] = float(bar4[index]) / bucket4_count
 
-  	
-  	p1 = plt.bar(ind, experts) 
-  	p2 = plt.bar(ind, masters, bottom = experts) 
-  	p3 = plt.bar(ind, grandmasters, bottom = bars)
-  	
-  	plt.ylabel('Average Number of Particpators')
-  	if after_comp: plt.title('After Reallocation: Partipation Compared to Competition Payout')
- 	else: plt.title('Before Reallocation: Partipation Compared to Competition Payout')
- 	
-	plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
-	plt.xlabel('Total Competition Payout ($)')
-	plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
-  	plt.show()
+		grandmasters = [bar1[0], bar2[0], bar3[0], bar4[0]]
+		masters = [bar1[1], bar2[1], bar3[1], bar4[1]]
+		experts = [bar1[2], bar2[2], bar3[2], bar4[2]]
+		ind = np.arange(4)
+		bars = [bar1[1] + bar1[2], bar2[1] + bar2[2], bar3[1] + bar3[2], bar4[1] + bar4[2]]
+
+
+		p1 = plt.bar(ind, experts) 
+		p2 = plt.bar(ind, masters, bottom = experts) 
+		p3 = plt.bar(ind, grandmasters, bottom = bars)
+
+		plt.ylabel('Average Number of Particpators')
+		if after_comp: plt.title('After Reallocation: Partipation Compared to Competition Payout')
+		else: plt.title('Before Reallocation: Partipation Compared to Competition Payout')
+
+		plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
+		plt.xlabel('Total Competition Payout ($)')
+		plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
+		plt.show()
 
 '''
 Plots point gain for each competition (outside of the gold competition)
