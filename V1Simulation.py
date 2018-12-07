@@ -120,15 +120,21 @@ def make_readable(name):
 
 
 
-def make_category_histogram(frequencies, competition_name):
+def make_category_histogram(frequencies, competition_name, after_comp, save_plots):
+	fig = plt.figure(figsize=(12.5, 7.5))
 	categories = ('Grandmasters', 'Masters', 'Experts')
 	y_pos = np.arange(len(categories))
 	plt.bar(y_pos, frequencies, align='center', alpha=0.5)
 	plt.xticks(y_pos, categories)
 	plt.ylabel('Number of competitors')
 	plt.xlabel('Competitor category')
-	plt.title('Number of competitors by category for ' + competition_name)
-	plt.show()
+	if after_comp: plt.title('Number of competitors by category for ' + competition_name + " after reallocation")
+	else: plt.title('Number of competitors by category for ' + competition_name + "before reallocation")
+	if save_plots:
+		 
+		if after_comp: fig.savefig("plots/" + competition_name + "category_histogram" + "_after_reallocation.png", dpi=fig.dpi)
+		else: fig.savefig("plots/" + competition_name + "category_histogram.png", dpi=fig.dpi)
+	else: plt.show()
 
 
 def get_frequencies(competitor_info):
@@ -142,14 +148,14 @@ def get_frequencies(competitor_info):
 	return frequencies
 
 
-def plot_competitor_info(normal_competitors_info, gold_competitors_info=None):
+def plot_competitor_info(normal_competitors_info, gold_competitors_info=None, after_comp=False, save_plots=False):
 	global num_retained
 
 	if gold_competitors_info is not None: 
-		make_category_histogram(get_frequencies(gold_competitors_info), make_readable("two-sigma-financial-news"))
+		make_category_histogram(get_frequencies(gold_competitors_info), make_readable("two-sigma-financial-news"),after_comp, save_plots=save_plots)
 
 	for key in normal_competitors_info:
-		make_category_histogram(get_frequencies(normal_competitors_info[key]), make_readable(key))
+		make_category_histogram(get_frequencies(normal_competitors_info[key]), make_readable(key), after_comp, save_plots=save_plots)
 
 
 '''
@@ -163,9 +169,10 @@ changes as the payout is changed.
 Author: John Solitario
 Last Edited: 12/6/2018
 '''
-def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, after_comp):
+def plot_payout_category_bars(gold_competitors_info, normal_competitors_info, after_comp, save_plots=False):
 	# Mapping from competition name to payout
 	global competitions_to_payouts
+	fig = plt.figure(figsize=(12.5, 7.5))
 
 # input:
 #	gold_competitors_info -- sorted list over all competitors in the gold competition:
@@ -175,35 +182,33 @@ def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_inf
 #	normal_competitors_info -- dict mapping from competition name to sorted list over
 #	all competitors in the gold competition (sorted done as in gold_competitors_info)
 
-	# Index 0 -> gramndmaster, Index 2 -> master, Index 3 -> expert
 
-
+	# Index 0 -> granndmaster, Index 1 -> master, Index 2 -> expert
 	frequencies = {}
 	for comp in normal_competitors_info:
-		if comp == "NFL-Punt-Analytics-Competition": continue
 		frequencies[comp] = get_frequencies(normal_competitors_info[comp])
 	frequencies["two-sigma-financial-news"] = get_frequencies(gold_competitors_info)
 
-	bar1, bar2, bar3, bar4 = [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0] # bucket1 0 - 25,000, bucket2 25,001 to 50,000, etc.
+	bar1, bar2, bar3, bar4 = [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0] # bucket1 0 - 25,000, bucket2 25,001 - 50,000, etc.
 	bucket1_count, bucket2_count, bucket3_count, bucket4_count = 0, 0, 0, 0
 
 	for comp in frequencies:
 		if competitions_to_payouts[comp] <= 25000:
-			bucket1_count +=1
+			bucket1_count += 1
 			frequency = frequencies[comp]
-			for index in range(len(bar1)): bar1[index] += frequency[index]
+			for index in range(3): bar1[index] += frequency[index]
 		elif competitions_to_payouts[comp] > 25000 and competitions_to_payouts[comp] <= 50000: 
-			bucket2_count +=1
+			bucket2_count += 1
 			frequency = frequencies[comp]
-			for index in range(len(bar2)): bar2[index] += frequency[index]
+			for index in range(3): bar2[index] += frequency[index]
 		elif competitions_to_payouts[comp] > 50000 and competitions_to_payouts[comp] <= 75000: 
-			bucket3_count +=1
+			bucket3_count += 1
 			frequency = frequencies[comp]
-			for index in range(len(bar3)): bar3[index] += frequency[index]
+			for index in range(3): bar3[index] += frequency[index]
 		else: 
-			bucket4_count +=1
+			bucket4_count += 1
 			frequency = frequencies[comp]
-			for index in range(len(bar4)): bar4[index] += frequency[index]
+			for index in range(3): bar4[index] += frequency[index]
 
 	for index in range(3):
 		bar1[index] = float(bar1[index]) / bucket1_count
@@ -218,18 +223,21 @@ def plot_payout_category_best_fits(gold_competitors_info, normal_competitors_inf
 		bars = [bar1[1] + bar1[2], bar2[1] + bar2[2], bar3[1] + bar3[2], bar4[1] + bar4[2]]
 
 
-		p1 = plt.bar(ind, experts) 
-		p2 = plt.bar(ind, masters, bottom = experts) 
-		p3 = plt.bar(ind, grandmasters, bottom = bars)
+	p1 = plt.bar(ind, experts) 
+	p2 = plt.bar(ind, masters, bottom = experts) 
+	p3 = plt.bar(ind, grandmasters, bottom = bars)
 
-		plt.ylabel('Average Number of Particpators')
-		if after_comp: plt.title('After Reallocation: Partipation Compared to Competition Payout')
-		else: plt.title('Before Reallocation: Partipation Compared to Competition Payout')
+	plt.ylabel('Average Number of Particpators')
+	if after_comp: plt.title('After Reallocation: Partipation Compared to Competition Payout')
+	else: plt.title('Before Reallocation: Partipation Compared to Competition Payout')
 
-		plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
-		plt.xlabel('Total Competition Payout ($)')
-		plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
-		plt.show()
+	plt.xticks(ind, ('0 to 25K', '25K to 50K', '50K to 75K', '75K to 100K'))
+	plt.xlabel('Total Competition Payout ($)')
+	plt.legend((p1[0], p2[0], p3[0]), ('Experts', 'Masters', 'Grandmasters'))
+	if save_plots:
+		if after_comp: fig.savefig("plots/payout_category" + "_after_reallocation", dpi=fig.dpi)
+		else: fig.savefig("plots/payout_category", dpi=fig.dpi)
+	else: plt.show()
 
 '''
 Plots point gain for each competition (outside of the gold competition)
@@ -238,24 +246,31 @@ Using a stacked bar chart
 Author: Sam Sklar
 Last Edited 12/6/2018
 '''
-def plot_point_gains(average_gains, user_info):
+def plot_point_gains(average_gains, user_info, save_plots=False):
+    fig = plt.figure(figsize=(12.5, 7.5))
     bars1 = []
     bars2 = []
     r = []
-    shortened_names = ["Revenue", "Quora", "Airbus", "Protein Atlas", "Santa",\
-    					"Whales", "Merchants", "Images", "PlastiCC", "Doodles"]
-    count = 0
+
+    shortened_names = ["Airbus", "Doodle", "Images", "Merchant", "NFL", "PLAsTiCC",\
+    					"Protein", "Quora", "Revenue", "Santa", "Whale"]
     
-    for key in average_gains.keys(): 
+    competitions = [key for key in average_gains.keys()]
+    sorted_competitions = []
+    for name in shortened_names:
+    	if name not in ["NFL", "PLAsTiCC"]: name = name[0].lower() + name[1:]
+    	for competition in competitions:
+    		if name in competition.split("-"): sorted_competitions.append(competition)
+
+    count = 0
+    for competition in sorted_competitions: 
         # Don't plot the NFL competition since we don't
         # have enough data about it
-        if key == "NFL-Punt-Analytics-Competition": continue
-        competitors = get_competitors(key, user_info)
+        competitors = get_competitors(competition, user_info)
         original_score = compute_score(competitors, user_info)
         bars1.append(original_score)
-        point_gain = average_gains[key]
-        new_score = point_gain
-        bars2.append(new_score)
+        point_gain = average_gains[competition]
+        bars2.append(point_gain)
         r.append(count)
         count += 1
                 
@@ -264,7 +279,7 @@ def plot_point_gains(average_gains, user_info):
      
     # Create brown bars
     plt.bar(r, bars1, edgecolor='white', width=barWidth)
-    # Create green bars (middle), on top of the firs ones
+    # Create green bars (middle), on top of the first ones
     plt.bar(r, bars2, bottom=bars1, edgecolor='white', width=barWidth)
      
     # Custom X axis
@@ -273,13 +288,15 @@ def plot_point_gains(average_gains, user_info):
     
     #Custom Y axis
     plt.ylabel("Points (Before:Blue and After:Orange)")
+
+    plt.title("Points gained due to reallocation")
      
-    # Show graphic
-    plt.show()
+    if save_plots: fig.savefig("plots/point_gains", dpi=fig.dpi)
+    else: plt.show()
 
 
 # Perform the simulation
-def perform_simulation(user_data, gold_competition, normal_competition_names, make_plots):
+def perform_simulation(user_data, gold_competition, normal_competition_names, make_plots, save_plots):
 	global num_retained
 
 	# mapping from expert, master, and grandmaster usernames to (tier, points)
@@ -295,7 +312,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	gold_competitors_retained_info = gold_competitors_info[:num_retained]
 	gold_competitors_eliminated_info = gold_competitors_info[num_retained:]
 
-	if make_plots: plot_competitor_info(normal_competitors_info, gold_competitors_info)
+	if make_plots: plot_competitor_info(normal_competitors_info, gold_competitors_info, after_comp=False, save_plots=save_plots)
 
 	# Find the assignment probabilities for the remaining 11 competitions
 	normal_payouts = [45000., 25000., 60000., 37000., 25000., 80000., 25000., 50000., 25000., 25000., 25000.]
@@ -303,7 +320,7 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 	probabilities = [x / norm_const for x in normal_payouts]
 
 	# Plot payout by category best fit lines BEFORE reallocation
-	if make_plots: plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info, False)
+	if make_plots: plot_payout_category_bars(gold_competitors_info, normal_competitors_info, False, save_plots=save_plots)
 
 	# Average across 100 allocations
 	average_gains = {}
@@ -325,9 +342,9 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 
 	# Plot payout by category best fit lines, competitor info and marginal gains AFTER reallocation
 	if make_plots: 
-		plot_payout_category_best_fits(gold_competitors_info, normal_competitors_info_updated, False)
-		plot_competitor_info(normal_competitors_info_updated)
-		plot_point_gains(average_gains, user_info)
+		plot_payout_category_bars(gold_competitors_info, normal_competitors_info_updated, True, save_plots=save_plots)
+		plot_competitor_info(normal_competitors_info_updated, after_comp=True, save_plots=save_plots)
+		plot_point_gains(average_gains, user_info, save_plots=save_plots)
 
 
 
@@ -352,8 +369,13 @@ def main():
 	# If make_plots is true then we generate plots throughout
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--plot", help="run simulation with plotting", action="store_true")
+	parser.add_argument("-s", "--save", help="save all generated plots", action="store_true")
 	args = parser.parse_args()
-	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=args.plot)
+
+	# We'll need a plots directory for saving generated figures
+	if args.save and not os.path.isdir("plots"): os.mkdir("plots")
+
+	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=args.plot, save_plots=args.save)
 	
 
 if __name__ == "__main__":

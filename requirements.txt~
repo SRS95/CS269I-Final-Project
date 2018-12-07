@@ -1,0 +1,8 @@
+numpy
+pandas
+matplotlib
+argparse
+bs4
+requests
+time
+subprocess
