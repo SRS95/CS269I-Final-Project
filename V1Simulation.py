@@ -22,7 +22,7 @@ import argparse
 import zipfile
 
 # Number of users kept in the gold competition
-num_retained = 25
+num_retained = 100
 
 # Mapping from competition name to payout
 competitions_to_payouts =\
@@ -48,8 +48,21 @@ def form_leaderboards_dir():
 def get_competitors(competition, user_info):
 	usernames = set(user_info.keys())
 	competitors = set(pd.read_csv("./Leaderboards/" + competition + "-publicleaderboard.csv").values[:,1])
+	
+	# These are all of the users in our user dataset that also
+	# appear on the Kaggle leaderboards we are considering
 	overlap_users = competitors.intersection(usernames)
 
+	result = {}
+	for user in overlap_users: result[user] = user_info[user]
+
+	# Sort users by points from most to least
+	return sorted(result.items(), key=lambda x: x[1][1], reverse=True)
+
+
+	# This sorting procedure puts grandmasters above masters and masters
+	# above grandmasters regardless of Kaggle points:
+	'''
 	result_grandmasters = {}
 	result_masters = {}
 	result_experts = {}
@@ -66,6 +79,7 @@ def get_competitors(competition, user_info):
 
 	result = result_grandmasters + result_masters + result_experts
 	return result
+	'''
 
 
 # Returs a mapping from all experts, masters, and grandmasters
@@ -76,35 +90,72 @@ def get_user_info(user_data):
 	return result
 
 
+# Sorts a dict mapping from competition name
+# to competitors as done in get_competitors
+def sort_competitors_dict(comp_to_competitors):
+	result = {}
+
+	for comp in comp_to_competitors.keys():
+		competitors = comp_to_competitors[comp]
+		result[comp] = sorted(competitors, key=lambda x: x[1][1], reverse=True)
+
+	return result
+
+
 # Allocate those eliminated from gold to new competitions
 def allocate_eliminated(user_info, normal_competition_names, probabilities, normal_competitors):
 	# Assign all users to new competitions
 	choices = np.arange(0, len(normal_competition_names))
 	for user in user_info:
-		assignment = normal_competition_names[np.random.choice(a=choices, p=probabilities)]
-		normal_competitors[assignment].append(user)
+		# User competes in a total of num_comps competitions
+		num_comps = np.random.randint(1, len(normal_competition_names) / 2 + 1)
+		
+		# Get num_comps competitions for user to compete in
+		assignment = list(np.random.choice(a=choices, p=probabilities, size=(len(normal_competition_names),), replace=False))
+
+		# Get the names of the competition to which user was assigned
+		# Necessary to access normal_competitors dictionary
+		assignment_comp_names = []
+		for comp_idx in assignment: assignment_comp_names.append(normal_competition_names[comp_idx])
+		
+		# Append user to all appropriate competitors lists
+		# Avoid adding users to a competition more than once
+		for comp_name in assignment_comp_names:
+			if user not in normal_competitors[comp_name]:
+				normal_competitors[comp_name].append(user)
+
+	# Need to apply the same sorting procedure as
+	# in get_competitors before returning
+	normal_competitors = sort_competitors_dict(normal_competitors)
 	return normal_competitors
 
 
-def compute_score(competitors, user_info):
+# Computes the welfare for a given competition
+def compute_welfare(competitors, user_info):
+	 global num_retained
 	 total = 0.0
 
-	 for competitor in competitors:
+	 # Assuming only the top_competitors competitors matter
+	 top_competitors = competitors[:num_retained]
+
+	 for competitor in top_competitors:
 	 	competitor_name = competitor[0]
 	 	total += user_info[competitor_name][1]
 
 	 return total
+
 
 # Compute the reallocation gains
 def compute_gains(before, after, user_info):
 	result = {}
 
 	for competition in before.keys():
-		before_score = compute_score(before[competition], user_info)
-		after_score = compute_score(after[competition], user_info)
+		before_score = compute_welfare(before[competition], user_info)
+		after_score = compute_welfare(after[competition], user_info)
 		result[competition] = after_score - before_score
 
 	return result
+
 
 # Makes a competition name readable for plotting purposes
 def make_readable(name):
@@ -135,6 +186,7 @@ def make_category_histogram(frequencies, competition_name, after_comp, save_plot
 		if after_comp: fig.savefig("plots/" + competition_name + "category_histogram" + "_after_reallocation.png", dpi=fig.dpi)
 		else: fig.savefig("plots/" + competition_name + "category_histogram.png", dpi=fig.dpi)
 	else: plt.show()
+
 
 
 def get_frequencies(competitor_info):
@@ -267,7 +319,7 @@ def plot_point_gains(average_gains, user_info, save_plots=False):
         # Don't plot the NFL competition since we don't
         # have enough data about it
         competitors = get_competitors(competition, user_info)
-        original_score = compute_score(competitors, user_info)
+        original_score = compute_welfare(competitors, user_info)
         bars1.append(original_score)
         point_gain = average_gains[competition]
         bars2.append(point_gain)
@@ -296,15 +348,13 @@ def plot_point_gains(average_gains, user_info, save_plots=False):
 
 
 # Perform the simulation
-def perform_simulation(user_data, gold_competition, normal_competition_names, make_plots, save_plots):
-	global num_retained
-
+def perform_simulation(user_data, gold_competition, normal_competition_names, num_retained, make_plots, save_plots):
 	# mapping from expert, master, and grandmaster usernames to (tier, points)
 	user_info = get_user_info(user_data)
 
 	gold_competitors_info = get_competitors(gold_competition, user_info)
 	
-	# Mapping from competition name to numpy array of competitor names
+	# Mapping from competition name to list of lists of form [competitor name, (tier, points)
 	normal_competitors_info = {}
 	for name in normal_competition_names: normal_competitors_info[name] = get_competitors(name, user_info)
 
@@ -346,6 +396,32 @@ def perform_simulation(user_data, gold_competition, normal_competition_names, ma
 		plot_competitor_info(normal_competitors_info_updated, after_comp=True, save_plots=save_plots)
 		plot_point_gains(average_gains, user_info, save_plots=save_plots)
 
+	return average_gains
+
+
+def find_best_num_retained(user_data, gold_competition, normal_competition_names, args):
+	global num_retained
+	x_vals = range(25, 250, 5)
+	y_vals = []  # Fill with average gains for given num_retained value
+	
+	for k in x_vals:
+		num_retained = k
+		average_gains = perform_simulation(user_data, gold_competition, normal_competition_names,\
+										num_retained, make_plots=args.plot, save_plots=args.save)
+		# Compute the average total gain for the given choice of num_retained
+		y_vals.append(sum([gain for gain in average_gains.values()]) / float(len(average_gains)))
+
+	fig = plt.figure(figsize=(12.5, 7.5))
+	plt.plot(x_vals, y_vals)
+	plt.xlabel("Number of competitors in the gold competition")
+	plt.ylabel("Average gain after reallocation")
+	plt.title("Average gain vs. number retained in gold competition")
+	if args.save: fig.savefig("plots/best_num_retained", dpi=fig.dpi)
+	else: plt.show()
+
+	max_gain_index = np.argmax(y_vals)
+	print ("The value for num_retained giving the highest average gain is: " + str(x_vals[max_gain_index]))
+
 
 
 def main():
@@ -370,12 +446,16 @@ def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--plot", help="run simulation with plotting", action="store_true")
 	parser.add_argument("-s", "--save", help="save all generated plots", action="store_true")
+	parser.add_argument("-f", "--find_best_num_retained", help="Finds the best number of retained competitors in the gold competition", action="store_true")
 	args = parser.parse_args()
 
 	# We'll need a plots directory for saving generated figures
 	if args.save and not os.path.isdir("plots"): os.mkdir("plots")
 
-	perform_simulation(user_data, gold_competition, normal_competition_names, make_plots=args.plot, save_plots=args.save)
+	if args.find_best_num_retained: find_best_num_retained(user_data, gold_competition,\
+															normal_competition_names, args)
+	else: perform_simulation(user_data, gold_competition, normal_competition_names,\
+							num_retained, make_plots=args.plot, save_plots=args.save)
 	
 
 if __name__ == "__main__":
