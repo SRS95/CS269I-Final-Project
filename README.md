@@ -14,3 +14,8 @@ Or:
 ```
 python3 V1Simulation.py -p
 ```
+
+To download all dependencies, type:
+```
+pip3 install -r requirements.txt
+```
