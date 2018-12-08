@@ -20,7 +20,7 @@ To download all dependencies, run:
 ```
 pip3 install -r requirements.txt
 ```
-Finally, to reproduce our results for finding the optimal number of users retained in the gold competitions, run:
+Finally, to reproduce our results for finding the optimal number of users retained in the gold competition, run:
 ```
 python3 V1Simulation.py -p -s -f
 ```
