@@ -7,7 +7,7 @@ would have otherwise chosen to compete in the highest paying
 competition to compete in other "normal" competitions.
 
 Author: Sam Schwager
-Last Edited: 12/4/2018
+Last Edited: 12/7/2018
 '''
 
 import json
@@ -218,8 +218,8 @@ This should allow us to get a sense of how
 the number of players of a given category
 changes as the payout is changed.
 
-Author: John Solitario
-Last Edited: 12/6/2018
+Authors: John Solitario
+Last Edited: 12/7/2018
 '''
 def plot_payout_category_bars(gold_competitors_info, normal_competitors_info, after_comp, save_plots=False):
 	# Mapping from competition name to payout
@@ -279,7 +279,7 @@ def plot_payout_category_bars(gold_competitors_info, normal_competitors_info, af
 	p2 = plt.bar(ind, masters, bottom = experts) 
 	p3 = plt.bar(ind, grandmasters, bottom = bars)
 
-	plt.ylabel('Average Number of Particpators')
+	plt.ylabel('Average Number of Participants')
 	if after_comp: plt.title('After Reallocation: Partipation Compared to Competition Payout')
 	else: plt.title('Before Reallocation: Partipation Compared to Competition Payout')
 
@@ -291,15 +291,35 @@ def plot_payout_category_bars(gold_competitors_info, normal_competitors_info, af
 		else: fig.savefig("plots/payout_category", dpi=fig.dpi)
 	else: plt.show()
 
+
+# This just plots the orange part of what we plotted below
+def plot_point_gains_simple(r, bars, barWidth, shortened_names, save_plots):
+	fig = plt.figure(figsize=(12.5, 7.5))
+
+	plt.bar(r, bars, edgecolor='white', width=barWidth)
+	 
+	# Custom X axis
+	plt.xticks(r, shortened_names, fontweight='bold')
+	plt.xlabel("Competition")
+
+	#Custom Y axis
+	plt.ylabel("Point gains")
+
+	plt.title("Points gained due to reallocation")
+
+	if save_plots: fig.savefig("plots/point_gains_simple", dpi=fig.dpi)
+	else: plt.show()
+
+
+
 '''
 Plots point gain for each competition (outside of the gold competition)
 Using a stacked bar chart
 
 Author: Sam Sklar
-Last Edited 12/6/2018
+Last Edited 12/7/2018
 '''
 def plot_point_gains(average_gains, user_info, save_plots=False):
-    fig = plt.figure(figsize=(12.5, 7.5))
     bars1 = []
     bars2 = []
     r = []
@@ -328,7 +348,11 @@ def plot_point_gains(average_gains, user_info, save_plots=False):
                 
     # Names of group and bar width
     barWidth = 1
+
+    # Just plot point gains
+    plot_point_gains_simple(r, bars2, barWidth, shortened_names, save_plots)
      
+    fig = plt.figure(figsize=(12.5, 7.5))
     # Create brown bars
     plt.bar(r, bars1, edgecolor='white', width=barWidth)
     # Create green bars (middle), on top of the first ones
@@ -342,7 +366,7 @@ def plot_point_gains(average_gains, user_info, save_plots=False):
     plt.ylabel("Points (Before:Blue and After:Orange)")
 
     plt.title("Points gained due to reallocation")
-     
+
     if save_plots: fig.savefig("plots/point_gains", dpi=fig.dpi)
     else: plt.show()
 
