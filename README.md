@@ -1,5 +1,5 @@
 # CS269I-Final-Project
-Analyzing Kaggle from a game-theoretic standpoint.
+Implementation portion of the paper "A Game-Theoretic Analysis of Kaggle" by Sam Schwager, John Solitario, and Sam Sklar. 
 
 To run V1Simulation, simply run the following from the command line:
 ```
